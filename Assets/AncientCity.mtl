@@ -1,0 +1,453 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 18.06.2017 20:11:43
+
+newmtl 7821b820_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 7821b820.png
+	map_Kd 7821b820.png
+	map_d 7821b820.png
+
+newmtl 2836bb1a_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 2836bb1a.png
+	map_Kd 2836bb1a.png
+	map_d 2836bb1a.png
+
+newmtl 2497eaa3_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 2497eaa3.png
+	map_Kd 2497eaa3.png
+	map_d 2497eaa3.png
+
+newmtl fc937467_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka fc937467.png
+	map_Kd fc937467.png
+	map_d fc937467.png
+
+newmtl 90407a3d_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 90407a3d.png
+	map_Kd 90407a3d.png
+	map_d 90407a3d.png
+
+newmtl dfa380a7_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka dfa380a7.png
+	map_Kd dfa380a7.png
+	map_d dfa380a7.png
+
+newmtl 07eda070_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 07eda070.png
+	map_Kd 07eda070.png
+	map_bump -bm 0.3000 07eda070.png
+	bump -bm 0.3000 07eda070.png
+
+newmtl a4a6fac6_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka a4a6fac6.png
+	map_Kd a4a6fac6.png
+	map_bump -bm 0.3000 a4a6fac6.png
+	bump -bm 0.3000 a4a6fac6.png
+
+newmtl 63daad44_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 63daad44.png
+	map_Kd 63daad44.png
+	map_bump -bm 0.3000 63daad44.png
+	bump -bm 0.3000 63daad44.png
+
+newmtl 901a540b_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 901a540b.png
+	map_Kd 901a540b.png
+	map_bump -bm 0.3000 901a540b.png
+	bump -bm 0.3000 901a540b.png
+
+newmtl c4ce26e2_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka c4ce26e2.png
+	map_Kd c4ce26e2.png
+	map_bump -bm 0.3000 c4ce26e2.png
+	bump -bm 0.3000 c4ce26e2.png
+
+newmtl 7b39ea83_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 7b39ea83.png
+	map_Kd 7b39ea83.png
+	map_bump -bm 0.3000 7b39ea83.png
+	bump -bm 0.3000 7b39ea83.png
+
+newmtl ce664097_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ce664097.png
+	map_Kd ce664097.png
+	map_bump -bm 0.3000 ce664097.png
+	bump -bm 0.3000 ce664097.png
+
+newmtl 9df809a1_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 9df809a1.png
+	map_Kd 9df809a1.png
+	map_bump -bm 0.3000 9df809a1.png
+	bump -bm 0.3000 9df809a1.png
+
+newmtl 5e513cc5_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 5e513cc5.png
+	map_Kd 5e513cc5.png
+	map_bump -bm 0.3000 5e513cc5.png
+	bump -bm 0.3000 5e513cc5.png
+
+newmtl f415675a_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka f415675a.png
+	map_Kd f415675a.png
+	map_bump -bm 0.3000 f415675a.png
+	bump -bm 0.3000 f415675a.png
+
+newmtl 0a405ee3_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 0a405ee3.png
+	map_Kd 0a405ee3.png
+	map_bump -bm 0.3000 0a405ee3.png
+	bump -bm 0.3000 0a405ee3.png
+
+newmtl 58d00a4f_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 58d00a4f.png
+	map_Kd 58d00a4f.png
+	map_bump -bm 0.3000 58d00a4f.png
+	bump -bm 0.3000 58d00a4f.png
+
+newmtl fd0c9c35_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka fd0c9c35.png
+	map_Kd fd0c9c35.png
+	map_bump -bm 0.3000 fd0c9c35.png
+	bump -bm 0.3000 fd0c9c35.png
+
+newmtl e42819e3_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka e42819e3.png
+	map_Kd e42819e3.png
+	map_bump -bm 0.3000 e42819e3.png
+	bump -bm 0.3000 e42819e3.png
+
+newmtl 90990ede_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 90990ede.png
+	map_Kd 90990ede.png
+	map_bump -bm 0.3000 90990ede.png
+	bump -bm 0.3000 90990ede.png
+
+newmtl 097b9135_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 097b9135.png
+	map_Kd 097b9135.png
+	map_bump -bm 0.3000 097b9135.png
+	bump -bm 0.3000 097b9135.png
+
+newmtl 14298b8d_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 14298b8d.png
+	map_Kd 14298b8d.png
+	map_bump -bm 0.3000 14298b8d.png
+	bump -bm 0.3000 14298b8d.png
+
+newmtl 9046918f_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 9046918f.png
+	map_Kd 9046918f.png
+	map_bump -bm 0.3000 9046918f.png
+	bump -bm 0.3000 9046918f.png
+
+newmtl 57edf18c_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 57edf18c.png
+	map_Kd 57edf18c.png
+	map_bump -bm 0.3000 57edf18c.png
+	bump -bm 0.3000 57edf18c.png
+
+newmtl e482e897_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka e482e897.png
+	map_Kd e482e897.png
+	map_bump -bm 0.3000 e482e897.png
+	bump -bm 0.3000 e482e897.png
+
+newmtl f48035a9_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka f48035a9.png
+	map_Kd f48035a9.png
+	map_bump -bm 0.3000 f48035a9.png
+	bump -bm 0.3000 f48035a9.png
+
+newmtl c8fd41b6_dds
+	Ns 0.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.7000 0.7000 0.7000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka c8fd41b6.png
+	map_Kd c8fd41b6.png
+	map_d c8fd41b6.png
+
+newmtl wire_113135006
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.4431 0.5294 0.0235
+	Kd 0.4431 0.5294 0.0235
+	Ks 0.3500 0.3500 0.3500
