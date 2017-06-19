@@ -84,6 +84,7 @@ vector<_Shape> CharShape;
 
 GLuint program;
 GLuint mv_location, proj_location, texture_location, state_location, isTextured_location;
+GLuint mA_location, mS_location, mD_location;
 GLuint skyboxVAO, skyboxVBO;
 mat4 proj_matrix, view;
 float viewportAspect;
@@ -398,6 +399,9 @@ void My_Init()
 	proj_location = glGetUniformLocation(program, "um4p");
 	state_location = glGetUniformLocation(program, "state");
 	isTextured_location = glGetUniformLocation(program, "isTextured");
+	mA_location = glGetUniformLocation(program, "Material.ambient");
+	mS_location = glGetUniformLocation(program, "Material.specular");
+	mD_location = glGetUniformLocation(program, "Material.diffuse");
 
 	glUseProgram(program);
 
@@ -459,6 +463,16 @@ void My_Display()
 		}
 		else {
 			glUniform1i(isTextured_location, 0);
+			aiColor3D aD = SceneMaterial[mID].diffuse;
+			aiColor3D aS = SceneMaterial[mID].specular;
+			aiColor3D aA = SceneMaterial[mID].ambient;
+			vec4 D = vec4(aD.r, aD.g, aD.b, 0);
+			vec4 A = vec4(aA.r, aA.g, aA.b, 0);
+			vec4 S = vec4(aS.g, aS.g, aS.b, 0);
+
+			glUniform4fv(mA_location, 1, value_ptr(A));
+			glUniform4fv(mD_location, 1, value_ptr(D));
+			glUniform4fv(mS_location, 1, value_ptr(S));
 		}
 		glDrawElements(GL_TRIANGLES, SceneShape[i].drawCount, GL_UNSIGNED_INT, 0);
 	}
