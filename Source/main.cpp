@@ -486,6 +486,18 @@ void My_Display()
 	glUniform1i(isTextured_location, 0);
 	for (int i = 0; i < CharShape.size(); i++) {
 		glBindVertexArray(CharShape[i].vao);
+		int mID = CharShape[i].materialID;
+		aiColor3D aD = CharMaterial[mID].diffuse;
+		aiColor3D aS = CharMaterial[mID].specular;
+		aiColor3D aA = CharMaterial[mID].ambient;
+		vec4 D = vec4(aD.r, aD.g, aD.b, 0);
+		vec4 A = vec4(aA.r, aA.g, aA.b, 0);
+		vec4 S = vec4(aS.g, aS.g, aS.b, 0);
+
+		glUniform4fv(mA_location, 1, value_ptr(A));
+		glUniform4fv(mD_location, 1, value_ptr(D));
+		glUniform4fv(mS_location, 1, value_ptr(S));
+
 		glDrawElements(GL_TRIANGLES, CharShape[i].drawCount, GL_UNSIGNED_INT, 0);
 	}
 	/* render skybox */
