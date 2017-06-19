@@ -10,6 +10,18 @@ GLubyte timer_cnt = 0;
 bool timer_enabled = true;
 unsigned int timer_speed = 16;
 
+// Shader attributes
+GLint iLocPosition;
+GLint iLocNormal;
+GLint iLocMVP;
+GLint iLocf = 0;
+GLint iLocMDiffuse, iLocMAmbient, iLocMSpecular, iLocMShininess, iLocambient, iLocdiffuse, iLocspecular, iLocdir, iLocpoint, iLocspot;
+GLint iLocLDAmbient, iLocLDPosition, iLocRotate, iLocLDDiffuse, iLocLDSpecular;
+GLint iLocLPPosition, iLocR;
+GLint  iLocLPDiffuse, iLocLPSpecular, iLocLSDiffuse, iLocLSPosition, iLocSSepcular, iLocConstantAttenuation2, iLocQuadraticAttenuation2, iLocLinearAttenuation2;
+GLint iLocSpotExponent, iLocSpotCutoff, iLocSpotCosCutoff, iLocSpotDirection, iLocSwitch, iLocConstantAttenuation, iLocLinearAttenuation, iLocQuadraticAttenuation;
+GLint iLocLDPosition2;
+
 using namespace glm;
 using namespace std;
 
@@ -60,22 +72,39 @@ GLfloat skyboxVertices[] = {
 vector<const GLchar*> faces;
 GLuint cubemapTexture;
 
-struct _Shape { 
-	GLuint vao; 
-	GLuint vbo_position; 
-	GLuint vbo_normal; 
-	GLuint vbo_texcoord; 
+struct _Shape {
+	GLuint vao;
+	GLuint vbo_position;
+	GLuint vbo_normal;
+	GLuint vbo_texcoord;
 	GLuint ibo;
-	int drawCount; 
-	int materialID; 
+	int drawCount;
+	int materialID;
 };
-struct _Material { 
-	GLuint diffuse_tex; 
+struct _Material {
+	GLuint diffuse_tex;
 	aiColor3D ambient;
 	aiColor3D diffuse;
 	aiColor3D specular;
 	bool isTextured;
 };
+
+struct LightSourceParameters {
+	float ambient[4];
+	float diffuse[4];
+	float specular[4];
+	float position[4];
+	float halfVector[4];
+	float spotDirection[4];
+	float spotExponent;
+	float spotCutoff; // (range: [0.0,90.0], 180.0)
+	float spotCosCutoff; // (range: [1.0,0.0],-1.0)
+	float constantAttenuation;
+	float linearAttenuation;
+	float quadraticAttenuation;
+}typedef LightSource;
+
+LightSource lightsource[4];
 
 vector<_Material> SceneMaterial;
 vector<_Shape> SceneShape;
@@ -112,22 +141,22 @@ const string SCENE_TEXTURE_PATH = "Textures/";
 
 char** loadShaderSource(const char* file)
 {
-    FILE* fp = fopen(file, "rb");
-    fseek(fp, 0, SEEK_END);
-    long sz = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    char *src = new char[sz + 1];
-    fread(src, sizeof(char), sz, fp);
-    src[sz] = '\0';
-    char **srcp = new char*[1];
-    srcp[0] = src;
-    return srcp;
+	FILE* fp = fopen(file, "rb");
+	fseek(fp, 0, SEEK_END);
+	long sz = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	char *src = new char[sz + 1];
+	fread(src, sizeof(char), sz, fp);
+	src[sz] = '\0';
+	char **srcp = new char*[1];
+	srcp[0] = src;
+	return srcp;
 }
 
 void freeShaderSource(char** srcp)
 {
-    delete[] srcp[0];
-    delete[] srcp;
+	delete[] srcp[0];
+	delete[] srcp;
 }
 void shaderLog(GLuint shader)
 {
@@ -149,60 +178,60 @@ void shaderLog(GLuint shader)
 // define a simple data structure for storing texture image raw data
 typedef struct _TextureData
 {
-    _TextureData(void) :
-        width(0),
-        height(0),
-        data(0)
-    {
-    }
+	_TextureData(void) :
+		width(0),
+		height(0),
+		data(0)
+	{
+	}
 
-    int width;
-    int height;
-    unsigned char* data;
+	int width;
+	int height;
+	unsigned char* data;
 } TextureData;
 
 // load a png image and return a TextureData structure with raw data
 // not limited to png format. works with any image format that is RGBA-32bit
 TextureData loadPNG(const char* const pngFilepath)
 {
-    TextureData texture;
-    int components;
-	
-    // load the texture with stb image, force RGBA (4 components required)
-    stbi_uc *data = stbi_load(pngFilepath, &texture.width, &texture.height, &components, 4);
+	TextureData texture;
+	int components;
 
-    // is the image successfully loaded?
-    if (data != NULL)
-    {
-        // copy the raw data
-        size_t dataSize = texture.width * texture.height * 4 * sizeof(unsigned char);
-        texture.data = new unsigned char[dataSize];
-        memcpy(texture.data, data, dataSize);
+	// load the texture with stb image, force RGBA (4 components required)
+	stbi_uc *data = stbi_load(pngFilepath, &texture.width, &texture.height, &components, 4);
 
-        // mirror the image vertically to comply with OpenGL convention
-        for (size_t i = 0; i < texture.width; ++i)
-        {
-            for (size_t j = 0; j < texture.height / 2; ++j)
-            {
-                for (size_t k = 0; k < 4; ++k)
-                {
-                    size_t coord1 = (j * texture.width + i) * 4 + k;
-                    size_t coord2 = ((texture.height - j - 1) * texture.width + i) * 4 + k;
-                    std::swap(texture.data[coord1], texture.data[coord2]);
-                }
-            }
-        }
+	// is the image successfully loaded?
+	if (data != NULL)
+	{
+		// copy the raw data
+		size_t dataSize = texture.width * texture.height * 4 * sizeof(unsigned char);
+		texture.data = new unsigned char[dataSize];
+		memcpy(texture.data, data, dataSize);
 
-        // release the loaded image
-        stbi_image_free(data);
+		// mirror the image vertically to comply with OpenGL convention
+		for (size_t i = 0; i < texture.width; ++i)
+		{
+			for (size_t j = 0; j < texture.height / 2; ++j)
+			{
+				for (size_t k = 0; k < 4; ++k)
+				{
+					size_t coord1 = (j * texture.width + i) * 4 + k;
+					size_t coord2 = ((texture.height - j - 1) * texture.width + i) * 4 + k;
+					std::swap(texture.data[coord1], texture.data[coord2]);
+				}
+			}
+		}
+
+		// release the loaded image
+		stbi_image_free(data);
 		printf("success load PNG %s\n", pngFilepath);
 	}
 	else {
 		printf("fail to load PNG %s\n", pngFilepath);
 	}
-	
 
-    return texture;
+
+	return texture;
 }
 
 GLuint loadCubemap(vector<const GLchar*> faces)
@@ -254,11 +283,11 @@ void setSkybox() {
 
 void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> &v_Shape, bool isTextured) {
 	const aiScene *scene = aiImportFile(objfile.c_str(), aiProcessPreset_TargetRealtime_MaxQuality);
-	
+
 	cout << "Load " << objfile << std::endl;
 	cout << "# of meshs: " << scene->mNumMeshes << std::endl;
 	cout << "# of materials: " << scene->mNumMaterials << std::endl;
-	
+
 	for (int i = 0; i < scene->mNumMaterials; i++) {
 		aiMaterial *material = scene->mMaterials[i];
 		_Material _material;
@@ -290,13 +319,13 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 			_material.isTextured = false;
 		}
 		v_Material.push_back(_material);
-	}	
+	}
 	for (int i = 0; i < scene->mNumMeshes; i++) {
 		aiMesh *mesh = scene->mMeshes[i];
 		_Shape _shape;
 		glGenVertexArrays(1, &_shape.vao);
 		glBindVertexArray(_shape.vao);
-		
+
 		glGenBuffers(1, &_shape.vbo_normal);
 		glGenBuffers(1, &_shape.vbo_position);
 		glGenBuffers(1, &_shape.vbo_texcoord);
@@ -307,8 +336,8 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 		float *texCoords = new float[mesh->mNumVertices * 2];
 
 		int idx = 0, tex_idx = 0;
-		
-		for (int v = 0; v < mesh->mNumVertices; v++, idx += 3, tex_idx += 2){
+
+		for (int v = 0; v < mesh->mNumVertices; v++, idx += 3, tex_idx += 2) {
 			positions[idx] = mesh->mVertices[v][0];
 			positions[idx + 1] = mesh->mVertices[v][1];
 			positions[idx + 2] = mesh->mVertices[v][2];
@@ -316,7 +345,7 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 			normals[idx] = mesh->mNormals[v][0];
 			normals[idx + 1] = mesh->mNormals[v][1];
 			normals[idx + 2] = mesh->mNormals[v][2];
-			
+
 			if (mesh->HasTextureCoords(0)) {
 				texCoords[tex_idx] = mesh->mTextureCoords[0][v][0];
 				texCoords[tex_idx + 1] = mesh->mTextureCoords[0][v][1];
@@ -324,9 +353,9 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 			else {
 				texCoords[tex_idx] = 0;
 				texCoords[tex_idx + 1] = 0;
- 			}
+			}
 		}
-		
+
 		unsigned int *indice = new unsigned int[mesh->mNumFaces * 3];
 
 		int face_idx = 0;
@@ -353,7 +382,7 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _shape.ibo);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->mNumFaces * sizeof(unsigned int) * 3, indice, GL_STATIC_DRAW);
-		
+
 		_shape.materialID = mesh->mMaterialIndex;
 		_shape.drawCount = mesh->mNumFaces * 3;
 
@@ -361,6 +390,78 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 	}
 	aiReleaseImport(scene);
 }
+void setLightingSource() {
+	float PLRange = 100;
+
+	lightsource[0].position[0] = 0;
+	lightsource[0].position[1] = 0;
+	lightsource[0].position[2] = -1;
+	lightsource[0].position[3] = 1;
+	lightsource[0].ambient[0] = 0.75;
+	lightsource[0].ambient[1] = 0.75;
+	lightsource[0].ambient[2] = 0.75;
+	lightsource[0].ambient[3] = 1;
+	//To Do : Setup your own lighting source parameters;
+
+	//dirctional light 
+	lightsource[1].position[0] = 0;
+	lightsource[1].position[1] = 2000;
+	lightsource[1].position[2] = 300;
+	lightsource[1].position[3] = 1;
+	lightsource[1].diffuse[0] = 1;
+	lightsource[1].diffuse[1] = 1;
+	lightsource[1].diffuse[2] = 1;
+	lightsource[1].diffuse[3] = 1;
+	lightsource[1].specular[0] = 1;
+	lightsource[1].specular[1] = 1;
+	lightsource[1].specular[2] = 1;
+	lightsource[1].specular[3] = 1;
+	lightsource[1].constantAttenuation = 1.0;
+	lightsource[1].linearAttenuation = 4.5 / PLRange;
+	lightsource[1].quadraticAttenuation = 75 / (PLRange* PLRange);
+
+	//point light 
+	lightsource[2].position[0] = 0;
+	lightsource[2].position[1] = -1;
+	lightsource[2].position[2] = 0;
+	lightsource[2].position[3] = 1;
+	lightsource[2].diffuse[0] = 1;
+	lightsource[2].diffuse[1] = 1;
+	lightsource[2].diffuse[2] = 1;
+	lightsource[2].diffuse[3] = 1;
+	lightsource[2].specular[0] = 1;
+	lightsource[2].specular[1] = 1;
+	lightsource[2].specular[2] = 1;
+	lightsource[2].specular[3] = 1;
+	lightsource[2].constantAttenuation = 1;
+	lightsource[2].linearAttenuation = 4.5 / PLRange;
+	lightsource[2].quadraticAttenuation = 75 / (PLRange* PLRange);
+
+	//spot light
+	lightsource[3].position[0] = 0;
+	lightsource[3].position[1] = 0.15;
+	lightsource[3].position[2] = 2;
+	lightsource[3].position[3] = 1;
+	lightsource[3].diffuse[0] = 1;
+	lightsource[3].diffuse[1] = 1;
+	lightsource[3].diffuse[2] = 1;
+	lightsource[3].diffuse[3] = 1;
+	lightsource[3].specular[0] = 1;
+	lightsource[3].specular[1] = 1;
+	lightsource[3].specular[2] = 1;
+	lightsource[3].specular[3] = 1;
+	lightsource[3].constantAttenuation = 1;
+	lightsource[3].linearAttenuation = 4.5 / PLRange;
+	lightsource[3].quadraticAttenuation = 75 / (PLRange* PLRange);
+	lightsource[3].spotDirection[0] = 0;
+	lightsource[3].spotDirection[1] = 0;
+	lightsource[3].spotDirection[2] = -2;
+	lightsource[3].spotDirection[3] = 0;
+	lightsource[3].spotExponent = 0.1;
+	lightsource[3].spotCutoff = 45;
+	lightsource[3].spotCosCutoff = 0.96592582628;
+}
+
 void My_Init()
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -380,7 +481,7 @@ void My_Init()
 	// Assign content of these shader files to those shaders we created before
 	glShaderSource(vertexShader, 1, vertexShaderSource, NULL);
 	glShaderSource(fragmentShader, 1, fragmentShaderSource, NULL);
-	
+
 	// Free the shader file string(won't be used any more)
 	freeShaderSource(vertexShaderSource);
 	freeShaderSource(fragmentShaderSource);
@@ -402,7 +503,34 @@ void My_Init()
 	mA_location = glGetUniformLocation(program, "Material.ambient");
 	mS_location = glGetUniformLocation(program, "Material.specular");
 	mD_location = glGetUniformLocation(program, "Material.diffuse");
-
+	/////////////////////////////////////////////////////////////////////
+	iLocLDAmbient = glGetUniformLocation(program, "LightSource[0].ambient");
+	iLocLDPosition = glGetUniformLocation(program, "LightSource[0].position");
+	////////////////////////////////////////////////////////////////////////
+	iLocLDPosition2 = glGetUniformLocation(program, "LightSource[1].position");
+	iLocLDDiffuse = glGetUniformLocation(program, "LightSource[1].diffuse");
+	iLocLDSpecular = glGetUniformLocation(program, "LightSource[1].specular");
+	//////////////////////////////////////////////////////////////////////////
+	iLocLPPosition = glGetUniformLocation(program, "LightSource[2].position");
+	iLocLPDiffuse = glGetUniformLocation(program, "LightSource[2].diffuse");
+	iLocLPSpecular = glGetUniformLocation(program, "LightSource[2].specular");
+	iLocConstantAttenuation = glGetUniformLocation(program, "LightSource[2].constantAttenuation");
+	iLocLinearAttenuation = glGetUniformLocation(program, "LightSource[2].linearAttenuation");
+	iLocQuadraticAttenuation = glGetUniformLocation(program, "LightSource[2].quadraticAttenuation");
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	iLocLSPosition = glGetUniformLocation(program, "LightSource[3].position");
+	iLocLSDiffuse = glGetUniformLocation(program, "LightSource[3].diffuse");
+	iLocSSepcular = glGetUniformLocation(program, "LightSource[3].specular");
+	iLocConstantAttenuation2 = glGetUniformLocation(program, "LightSource[3].constantAttenuation");
+	iLocLinearAttenuation2 = glGetUniformLocation(program, "LightSource[3].linearAttenuation");
+	iLocQuadraticAttenuation2 = glGetUniformLocation(program, "LightSource[3].quadraticAttenuation");
+	iLocSpotExponent = glGetUniformLocation(program, "LightSource[3].spotExponent");
+	iLocSpotCutoff = glGetUniformLocation(program, "LightSource[3].spotCutoff");
+	iLocSpotCosCutoff = glGetUniformLocation(program, "LightSource[3].spotCosCutoff");
+	iLocSpotDirection = glGetUniformLocation(program, "LightSource[3].spotDirection");
+	iLocSwitch = glGetUniformLocation(program, "switch_light");
+	iLocf = glGetUniformLocation(program, "f");
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	glUseProgram(program);
 
 	setSkybox();
@@ -415,7 +543,7 @@ void My_Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(program);
-	
+
 	MoveFore = Forward_Step - MoveFore;
 	MoveBack = Backward_Step - MoveBack;
 	MoveRight = Right_Step - MoveRight;
@@ -431,13 +559,13 @@ void My_Display()
 	MoveBack = Backward_Step;
 	MoveRight = Right_Step;
 	MoveLeft = Left_Step;
-	
-	vec3 ThirdPerson_offset = vec3(0.0f, 300.0f, -100.0f);
+
+	vec3 ThirdPerson_offset = vec3(0.0f, 300.0f, 100.0f);
 	vec3 FirstPerson_offset = vec3(0.0f, 200.0f, 15.0f);
 
 	if (isThirdPerson) view = lookAt(cameraPos + FirstPerson_offset, cameraPos + FirstPerson_offset + cameraFront, cameraUp);
 	else view = lookAt(cameraPos + ThirdPerson_offset, cameraPos + ThirdPerson_offset + cameraFront, cameraUp);
-	
+
 	proj_matrix = perspective(radians(45.0f), viewportAspect, 0.1f, 15000.0f);
 	proj_matrix = proj_matrix * view;
 
@@ -445,18 +573,47 @@ void My_Display()
 	glUniform1i(state_location, 0);
 	glUniform1i(isTextured_location, 1);
 
+
+	glUniform4fv(iLocLDAmbient, 1, lightsource[0].ambient);
+	glUniform4fv(iLocLDPosition, 1, lightsource[0].position);
+	glUniform4fv(iLocLDPosition2, 1, lightsource[1].position);
+	glUniform4fv(iLocLDDiffuse, 1, lightsource[1].diffuse);
+	glUniform4fv(iLocLDSpecular, 1, lightsource[1].specular);
+
+	/*************************************************************************************************/
+	glUniform4fv(iLocLPDiffuse, 1, lightsource[2].diffuse);
+	glUniform4fv(iLocLPSpecular, 1, lightsource[2].specular);
+	glUniform4fv(iLocLPPosition, 1, lightsource[2].position);
+	glUniform1f(iLocConstantAttenuation, lightsource[2].constantAttenuation);
+	glUniform1f(iLocLinearAttenuation, lightsource[2].linearAttenuation);
+	glUniform1f(iLocQuadraticAttenuation, lightsource[2].quadraticAttenuation);
+
+	/*************************************************************************************************/
+	glUniform4fv(iLocLSPosition, 1, lightsource[3].position);
+	glUniform4fv(iLocLSDiffuse, 1, lightsource[3].diffuse);
+	glUniform4fv(iLocSSepcular, 1, lightsource[3].specular);
+	glUniform1f(iLocConstantAttenuation2, lightsource[3].constantAttenuation);
+	glUniform1f(iLocLinearAttenuation2, lightsource[3].linearAttenuation);
+	glUniform1f(iLocQuadraticAttenuation2, lightsource[3].quadraticAttenuation);
+	glUniform1f(iLocSpotExponent, lightsource[3].spotExponent);
+	glUniform1f(iLocSpotCutoff, lightsource[3].spotCutoff);
+	glUniform1f(iLocSpotCosCutoff, lightsource[3].spotCosCutoff);
+	glUniform4fv(iLocSpotDirection, 1, lightsource[3].spotDirection);
+
+	/*************************************************************************************************/
+
 	mat4 Identity(1.0);
-	
+
 	glUniformMatrix4fv(proj_location, 1, GL_FALSE, &proj_matrix[0][0]);
 	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &Identity[0][0]);
 
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(texture_location, 0);
-	
+
 	for (int i = 0; i < SceneShape.size(); i++) {
 		glBindVertexArray(SceneShape[i].vao);
 
-		int mID = SceneShape[i].materialID; 
+		int mID = SceneShape[i].materialID;
 		if (SceneMaterial[mID].isTextured == true) {
 			glUniform1i(isTextured_location, 1);
 			glBindTexture(GL_TEXTURE_2D, SceneMaterial[mID].diffuse_tex);
@@ -476,7 +633,7 @@ void My_Display()
 		}
 		glDrawElements(GL_TRIANGLES, SceneShape[i].drawCount, GL_UNSIGNED_INT, 0);
 	}
-	
+
 	mat4 CharT = translate(Identity, cameraPos);
 	mat4 CharR;
 	mat4 Char_mv = CharT * CharR;
@@ -501,9 +658,10 @@ void My_Display()
 		glDrawElements(GL_TRIANGLES, CharShape[i].drawCount, GL_UNSIGNED_INT, 0);
 	}
 	/* render skybox */
-	
+
 	glUniform1i(state_location, 1);
 	glUniform1i(isTextured_location, 1);
+
 
 	mat4 S = scale(Identity, vec3(8000.0f, 8000.0f, 8000.0f));
 	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &S[0][0]);
@@ -515,10 +673,10 @@ void My_Display()
 	glUniform1i(glGetUniformLocation(program, "skybox"), 1);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
-	
+
 	glDepthMask(GL_TRUE);
-	
-    glutSwapBuffers();
+
+	glutSwapBuffers();
 }
 void My_Reshape(int width, int height)
 {
@@ -573,10 +731,10 @@ void onMouseMotion(int x, int y)
 
 void My_Keyboard(unsigned char key, int x, int y)
 {
-	switch (key) 
+	switch (key)
 	{
 	case 'w':
-		Forward_Step ++;
+		Forward_Step++;
 		printf("camera pos: (%f,%f,%f)\n", cameraPos.x, cameraPos.y, cameraPos.z);
 		break;
 	case 's':
@@ -604,7 +762,7 @@ void My_Keyboard(unsigned char key, int x, int y)
 
 void My_SpecialKeys(int key, int x, int y)
 {
-	switch(key)
+	switch (key)
 	{
 	case GLUT_KEY_F1:
 		displayNo = (displayNo + 1) % 2;
@@ -629,10 +787,10 @@ void My_SpecialKeys(int key, int x, int y)
 
 void My_Menu(int id)
 {
-	switch(id)
+	switch (id)
 	{
 	case MENU_TIMER_START:
-		if(!timer_enabled)
+		if (!timer_enabled)
 		{
 			timer_enabled = true;
 			glutTimerFunc(timer_speed, My_Timer, 0);
@@ -652,8 +810,8 @@ void My_Menu(int id)
 int main(int argc, char *argv[])
 {
 #ifdef __APPLE__
-    // Change working directory to source code path
-    chdir(__FILEPATH__("/../Assets/"));
+	// Change working directory to source code path
+	chdir(__FILEPATH__("/../Assets/"));
 #endif
 	// Initialize GLUT and GLEW, then create a window.
 	////////////////////
@@ -661,7 +819,7 @@ int main(int argc, char *argv[])
 #ifdef _MSC_VER
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 #else
-    glutInitDisplayMode(GLUT_3_2_CORE_PROFILE | GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+	glutInitDisplayMode(GLUT_3_2_CORE_PROFILE | GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 #endif
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(WIDTH, HEIGHT);
@@ -669,8 +827,9 @@ int main(int argc, char *argv[])
 #ifdef _MSC_VER
 	glewInit();
 #endif
-    glPrintContextInfo();
+	glPrintContextInfo();
 	My_Init();
+	setLightingSource();
 
 	// Create a menu and bind it to mouse right button.
 	int menu_main = glutCreateMenu(My_Menu);
@@ -693,7 +852,7 @@ int main(int argc, char *argv[])
 	glutPassiveMotionFunc(onMouseMotion);
 	glutKeyboardFunc(My_Keyboard);
 	glutSpecialFunc(My_SpecialKeys);
-	glutTimerFunc(timer_speed, My_Timer, 0); 
+	glutTimerFunc(timer_speed, My_Timer, 0);
 
 	// Enter main event loop.
 	glutMainLoop();
