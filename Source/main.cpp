@@ -1,5 +1,5 @@
 #include "../Externals/Include/Include.h"
-
+#include <set>
 #define MENU_TIMER_START 1
 #define MENU_TIMER_STOP 2
 #define MENU_EXIT 3
@@ -86,6 +86,7 @@ struct _Material {
 	aiColor3D ambient;
 	aiColor3D diffuse;
 	aiColor3D specular;
+	string name;
 	bool isTextured;
 };
 
@@ -110,11 +111,14 @@ vector<_Material> SceneMaterial;
 vector<_Shape> SceneShape;
 vector<_Material> CharMaterial;
 vector<_Shape> CharShape;
+vector<_Material> ShipMaterial;
+vector<_Shape> ShipShape;
 
 GLuint program;
 GLuint mv_location, proj_location, texture_location, state_location, isTextured_location;
 GLuint mA_location, mS_location, mD_location;
 GLuint skyboxVAO, skyboxVBO;
+GLuint Camera_location, CameraFront_location;
 mat4 proj_matrix, view;
 float viewportAspect;
 
@@ -132,12 +136,14 @@ int Backward_Step = 0, MoveBack = 0;
 int Left_Step = 0, MoveLeft = 0;
 int Right_Step = 0, MoveRight = 0;
 int isThirdPerson = 0;
-int stepsize = 20;
+int stepsize = 50;
 int obj_index[3];
 int material_index[3];
 int displayNo = 0;
 
 const string SCENE_TEXTURE_PATH = "Textures/";
+const float GROUND_HEIGHT = -770.0;
+const float G = 9.8f;
 
 char** loadShaderSource(const char* file)
 {
@@ -280,7 +286,8 @@ void setSkybox() {
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 }
-
+set<string> groundName = { "g qishang365_com647", "g qishang365_com346", "g qishang365_com347", "g qishang365_com837", "g qishang365_com348" };
+vector<aiMesh*> grounds;
 void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> &v_Shape, bool isTextured) {
 	const aiScene *scene = aiImportFile(objfile.c_str(), aiProcessPreset_TargetRealtime_MaxQuality);
 
@@ -296,16 +303,14 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 		material->Get(AI_MATKEY_COLOR_AMBIENT, _material.ambient);
 		material->Get(AI_MATKEY_COLOR_SPECULAR, _material.specular);
 		material->Get(AI_MATKEY_COLOR_DIFFUSE, _material.diffuse);
-		/*
-		printf("Ambient : (%f, %f, %f)\n", _material.ambient.r, _material.ambient.g, _material.ambient.b);
-		printf("Specular : (%f, %f, %f)\n", _material.specular.r, _material.specular.g, _material.specular.b);
-		printf("Diffuse : (%f, %f, %f)\n", _material.diffuse.r, _material.diffuse.g, _material.diffuse.b);
-		*/
-
+		
 		if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) == aiReturn_SUCCESS) {
 			string path = texturePath.C_Str();
 			TextureData texture;
-			path = SCENE_TEXTURE_PATH + path;
+			if(objfile == "AncientCity.obj") path = SCENE_TEXTURE_PATH + path;
+
+			cout << texturePath.C_Str() << endl;
+			_material.name = texturePath.C_Str();
 
 			texture = loadPNG(path.c_str());
 			glGenTextures(1, &_material.diffuse_tex);
@@ -320,9 +325,17 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 		}
 		v_Material.push_back(_material);
 	}
+
 	for (int i = 0; i < scene->mNumMeshes; i++) {
 		aiMesh *mesh = scene->mMeshes[i];
 		_Shape _shape;
+
+		if (groundName.find(string(mesh->mName.C_Str())) == groundName.end()) {}
+		else {
+			grounds.push_back(mesh);
+			cout << grounds.size() << endl;
+		}
+
 		glGenVertexArrays(1, &_shape.vao);
 		glBindVertexArray(_shape.vao);
 
@@ -405,8 +418,8 @@ void setLightingSource() {
 
 	//dirctional light 
 	lightsource[1].position[0] = 0;
-	lightsource[1].position[1] = 2000;
-	lightsource[1].position[2] = 300;
+	lightsource[1].position[1] = 1000;
+	lightsource[1].position[2] = 500;
 	lightsource[1].position[3] = 1;
 	lightsource[1].diffuse[0] = 1;
 	lightsource[1].diffuse[1] = 1;
@@ -500,6 +513,9 @@ void My_Init()
 	proj_location = glGetUniformLocation(program, "um4p");
 	state_location = glGetUniformLocation(program, "state");
 	isTextured_location = glGetUniformLocation(program, "isTextured");
+	Camera_location = glGetUniformLocation(program, "cameraPos");
+	CameraFront_location = glGetUniformLocation(program, "cameraFront");
+
 	mA_location = glGetUniformLocation(program, "Material.ambient");
 	mS_location = glGetUniformLocation(program, "Material.specular");
 	mD_location = glGetUniformLocation(program, "Material.diffuse");
@@ -537,8 +553,9 @@ void My_Init()
 
 	LoadOBJ("AncientCity.obj", SceneMaterial, SceneShape, true);
 	LoadOBJ("IronMan.obj", CharMaterial, CharShape, false);
+	LoadOBJ("ship.obj", ShipMaterial, ShipShape, true);
 }
-
+double time = 0;
 void My_Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -554,7 +571,20 @@ void My_Display()
 	cameraPos -= cameraFront * float(MoveBack * stepsize);
 	cameraPos += normalize(cross(cameraFront, cameraUp)) * float(MoveRight * stepsize);
 	cameraPos -= normalize(cross(cameraFront, cameraUp)) * float(MoveLeft * stepsize);
+	
+	if (cameraPos.y < -770) cameraPos.y = -770;
 
+	if (cameraPos.y > GROUND_HEIGHT)
+	{
+		time += .01;
+		cout << time << endl;
+		float dist = 0.5 * G * pow(time, 2);
+
+		cameraPos.y -= dist;
+	}
+	else {
+		time = 0;
+	}
 	MoveFore = Forward_Step;
 	MoveBack = Backward_Step;
 	MoveRight = Right_Step;
@@ -562,13 +592,20 @@ void My_Display()
 
 	vec3 ThirdPerson_offset = vec3(0.0f, 300.0f, 100.0f);
 	vec3 FirstPerson_offset = vec3(0.0f, 200.0f, 15.0f);
-
-	if (isThirdPerson) view = lookAt(cameraPos + FirstPerson_offset, cameraPos + FirstPerson_offset + cameraFront, cameraUp);
-	else view = lookAt(cameraPos + ThirdPerson_offset, cameraPos + ThirdPerson_offset + cameraFront, cameraUp);
+	
+	if (!isThirdPerson) {
+		view = lookAt(cameraPos + FirstPerson_offset, cameraPos + FirstPerson_offset + cameraFront, cameraUp);
+		glUniform4fv(Camera_location, 1, (value_ptr)(cameraPos + FirstPerson_offset));
+		glUniform4fv(CameraFront_location, 1, (value_ptr)(cameraFront));
+	}
+	else {
+		view = lookAt(cameraPos + ThirdPerson_offset, cameraPos + ThirdPerson_offset + cameraFront, cameraUp);
+		glUniform4fv(Camera_location, 1, (value_ptr)(cameraPos + ThirdPerson_offset));
+	}
 
 	proj_matrix = perspective(radians(45.0f), viewportAspect, 0.1f, 15000.0f);
 	proj_matrix = proj_matrix * view;
-
+	
 	/* render scene */
 	glUniform1i(state_location, 0);
 	glUniform1i(isTextured_location, 1);
@@ -616,6 +653,9 @@ void My_Display()
 		int mID = SceneShape[i].materialID;
 		if (SceneMaterial[mID].isTextured == true) {
 			glUniform1i(isTextured_location, 1);
+			aiColor3D aD = SceneMaterial[mID].diffuse;
+			vec4 D = vec4(aD.r, aD.g, aD.b, 0);
+			glUniform4fv(mD_location, 1, value_ptr(D));
 			glBindTexture(GL_TEXTURE_2D, SceneMaterial[mID].diffuse_tex);
 		}
 		else {
@@ -657,13 +697,43 @@ void My_Display()
 
 		glDrawElements(GL_TRIANGLES, CharShape[i].drawCount, GL_UNSIGNED_INT, 0);
 	}
-	/* render skybox */
+	mat4 ShipS = scale(Identity, vec3(0.2f, 0.2f, 0.2f));
+	mat4 ShipT = translate(Identity, vec3(1000.0f, 0.0f, 1000.0f));
+	mat4 Ship_mv = ShipT * ShipS;
+	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &Ship_mv[0][0]);
 
+	/* render skybox */
+	for (int i = 0; i < ShipShape.size(); i++) {
+		glBindVertexArray(ShipShape[i].vao);
+
+		int mID = ShipShape[i].materialID;
+		if (ShipMaterial[mID].isTextured == true) {
+			glUniform1i(isTextured_location, 1);
+			aiColor3D aD = ShipMaterial[mID].diffuse;
+			vec4 D = vec4(aD.r, aD.g, aD.b, 0);
+			glUniform4fv(mD_location, 1, value_ptr(D));
+			glBindTexture(GL_TEXTURE_2D, ShipMaterial[mID].diffuse_tex);
+		}
+		else {
+			glUniform1i(isTextured_location, 0);
+			aiColor3D aD = ShipMaterial[mID].diffuse;
+			aiColor3D aS = ShipMaterial[mID].specular;
+			aiColor3D aA = ShipMaterial[mID].ambient;
+			vec4 D = vec4(aD.r, aD.g, aD.b, 0);
+			vec4 A = vec4(aA.r, aA.g, aA.b, 0);
+			vec4 S = vec4(aS.g, aS.g, aS.b, 0);
+
+			glUniform4fv(mA_location, 1, value_ptr(A));
+			glUniform4fv(mD_location, 1, value_ptr(D));
+			glUniform4fv(mS_location, 1, value_ptr(S));
+		}
+		glDrawElements(GL_TRIANGLES, ShipShape[i].drawCount, GL_UNSIGNED_INT, 0);
+	}
 	glUniform1i(state_location, 1);
 	glUniform1i(isTextured_location, 1);
 
 
-	mat4 S = scale(Identity, vec3(8000.0f, 8000.0f, 8000.0f));
+	mat4 S = scale(Identity, vec3(9000.0f, 9000.0f, 9000.0f));
 	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &S[0][0]);
 
 	glDepthMask(GL_FALSE);
@@ -690,7 +760,7 @@ void My_Reshape(int width, int height)
 }
 
 void My_Timer(int val)
-{
+{	
 	glutPostRedisplay();
 	glutTimerFunc(timer_speed, My_Timer, val);
 }
@@ -748,7 +818,7 @@ void My_Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'z':
 		if (displayNo == 1) cameraPos.y++;
-		else cameraPos.y += 20;
+		else cameraPos.y += 100;
 		break;
 	case 'x':
 		if (displayNo == 1) cameraPos.y--;
