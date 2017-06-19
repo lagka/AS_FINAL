@@ -71,6 +71,10 @@ struct _Shape {
 };
 struct _Material { 
 	GLuint diffuse_tex; 
+	aiColor3D ambient;
+	aiColor3D diffuse;
+	aiColor3D specular;
+	bool isTextured;
 };
 
 vector<_Material> SceneMaterial;
@@ -258,7 +262,16 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 		aiMaterial *material = scene->mMaterials[i];
 		_Material _material;
 		aiString texturePath;
-		
+
+		material->Get(AI_MATKEY_COLOR_AMBIENT, _material.ambient);
+		material->Get(AI_MATKEY_COLOR_SPECULAR, _material.specular);
+		material->Get(AI_MATKEY_COLOR_DIFFUSE, _material.diffuse);
+		/*
+		printf("Ambient : (%f, %f, %f)\n", _material.ambient.r, _material.ambient.g, _material.ambient.b);
+		printf("Specular : (%f, %f, %f)\n", _material.specular.r, _material.specular.g, _material.specular.b);
+		printf("Diffuse : (%f, %f, %f)\n", _material.diffuse.r, _material.diffuse.g, _material.diffuse.b);
+		*/
+
 		if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) == aiReturn_SUCCESS) {
 			string path = texturePath.C_Str();
 			TextureData texture;
@@ -269,9 +282,11 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 			glBindTexture(GL_TEXTURE_2D, _material.diffuse_tex);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texture.width, texture.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture.data);
 			glGenerateMipmap(GL_TEXTURE_2D);
+
+			_material.isTextured = true;
 		}
 		else {
-		
+			_material.isTextured = false;
 		}
 		v_Material.push_back(_material);
 	}	
@@ -291,8 +306,7 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 		float *texCoords = new float[mesh->mNumVertices * 2];
 
 		int idx = 0, tex_idx = 0;
-
-		//cout << mesh->mTextureCoords[0][0][0];
+		
 		for (int v = 0; v < mesh->mNumVertices; v++, idx += 3, tex_idx += 2){
 			positions[idx] = mesh->mVertices[v][0];
 			positions[idx + 1] = mesh->mVertices[v][1];
@@ -302,10 +316,14 @@ void LoadOBJ(std::string objfile, vector<_Material> &v_Material, vector<_Shape> 
 			normals[idx + 1] = mesh->mNormals[v][1];
 			normals[idx + 2] = mesh->mNormals[v][2];
 			
-			if (isTextured == true) {
+			if (mesh->HasTextureCoords(0)) {
 				texCoords[tex_idx] = mesh->mTextureCoords[0][v][0];
 				texCoords[tex_idx + 1] = mesh->mTextureCoords[0][v][1];
 			}
+			else {
+				texCoords[tex_idx] = 0;
+				texCoords[tex_idx + 1] = 0;
+ 			}
 		}
 		
 		unsigned int *indice = new unsigned int[mesh->mNumFaces * 3];
@@ -424,7 +442,7 @@ void My_Display()
 	glUniform1i(isTextured_location, 1);
 
 	mat4 Identity(1.0);
-	//mat4 S = scale(Identity, vec3(0.05, 0.05, 0.05));
+	
 	glUniformMatrix4fv(proj_location, 1, GL_FALSE, &proj_matrix[0][0]);
 	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &Identity[0][0]);
 
@@ -433,20 +451,27 @@ void My_Display()
 	
 	for (int i = 0; i < SceneShape.size(); i++) {
 		glBindVertexArray(SceneShape[i].vao);
-		glBindTexture(GL_TEXTURE_2D, SceneMaterial[SceneShape[i].materialID].diffuse_tex);
+
+		int mID = SceneShape[i].materialID; 
+		if (SceneMaterial[mID].isTextured == true) {
+			glUniform1i(isTextured_location, 1);
+			glBindTexture(GL_TEXTURE_2D, SceneMaterial[mID].diffuse_tex);
+		}
+		else {
+			glUniform1i(isTextured_location, 0);
+		}
 		glDrawElements(GL_TRIANGLES, SceneShape[i].drawCount, GL_UNSIGNED_INT, 0);
 	}
 	
-	glUniform1i(isTextured_location, 0);
 	mat4 CharT = translate(Identity, cameraPos);
 	mat4 CharR;
 	mat4 Char_mv = CharT * CharR;
 
 	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &Char_mv[0][0]);
 
+	glUniform1i(isTextured_location, 0);
 	for (int i = 0; i < CharShape.size(); i++) {
 		glBindVertexArray(CharShape[i].vao);
-		glBindTexture(GL_TEXTURE_2D, CharMaterial[CharShape[i].materialID].diffuse_tex);
 		glDrawElements(GL_TRIANGLES, CharShape[i].drawCount, GL_UNSIGNED_INT, 0);
 	}
 	/* render skybox */
