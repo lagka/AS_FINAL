@@ -1,5 +1,6 @@
 #include "../Externals/Include/Include.h"
 #include <set>
+#include <fstream>
 #define MENU_TIMER_START 1
 #define MENU_TIMER_STOP 2
 #define MENU_EXIT 3
@@ -105,6 +106,8 @@ struct LightSourceParameters {
 	float quadraticAttenuation;
 }typedef LightSource;
 
+int mapH, mapW;
+unsigned char *mapData;
 LightSource lightsource[4];
 
 vector<_Material> SceneMaterial;
@@ -267,7 +270,6 @@ GLuint loadCubemap(vector<const GLchar*> faces)
 
 	return textureID;
 }
-
 void setSkybox() {
 	faces.push_back("skybox/right.png");
 	faces.push_back("skybox/left.png");
@@ -474,7 +476,49 @@ void setLightingSource() {
 	lightsource[3].spotCutoff = 45;
 	lightsource[3].spotCosCutoff = 0.96592582628;
 }
+int width, height;
+int header_size;
+float* terrain;
+unsigned char *info;
+unsigned char *heightmap;
+unsigned char* readBMP(char* filename)
+{
+	int i;
+	FILE* f = fopen(filename, "rb");
+	/* find the header_size */
+	fseek(f, 10, SEEK_SET);
+	fread(&header_size, sizeof(unsigned int), 1, f);
 
+	info = (unsigned char*)malloc(sizeof(unsigned char)*header_size);
+	/* read the whole header */
+	fseek(f, 0, SEEK_SET);
+	fread(info, sizeof(unsigned char), header_size, f);
+
+	/* find width and height from header info */
+	width = *(int*)&info[18];
+	height = *(int*)&info[22];
+
+	/* each pixel contains 3 bytes representing RGB separately */
+	int size = 3 * width * height;
+
+	/* allocate 3 bytes per pixel */
+	unsigned char* data = new unsigned char[size];
+	/* we've read the whole header, now the file pointer
+	is pointed to the starting point of the image pixel data */
+	fread(data, sizeof(unsigned char), size, f);
+	fclose(f);
+
+	return data;
+}
+void setTerrain() {
+	/* left-corner (-5650,-6200), y: -770 -> 74/255 */
+	/*							  y: 3000 -> 255/255*/
+	terrain = new float[height*width];
+	float HeightPerUnit = (3000.0 + 1500.0) / 255.0 - 74.0;
+	for (int i = 0; i < height*width; i++) {
+		terrain[i] = -1500 + (heightmap[i] - 74.0) * HeightPerUnit;
+	}
+}
 void My_Init()
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -554,6 +598,12 @@ void My_Init()
 	LoadOBJ("AncientCity.obj", SceneMaterial, SceneShape, true);
 	LoadOBJ("IronMan.obj", CharMaterial, CharShape, false);
 	LoadOBJ("ship.obj", ShipMaterial, ShipShape, true);
+	//heightmap = readBMP("1.bmp");
+	setTerrain();
+}
+float getHeight(float x, float z) {
+	int index = width * (width - (x + 5650) / 2) + ((z + 6200) / 2);
+	return terrain[index];
 }
 double time = 0;
 void My_Display()
@@ -571,32 +621,29 @@ void My_Display()
 	cameraPos -= cameraFront * float(MoveBack * stepsize);
 	cameraPos += normalize(cross(cameraFront, cameraUp)) * float(MoveRight * stepsize);
 	cameraPos -= normalize(cross(cameraFront, cameraUp)) * float(MoveLeft * stepsize);
-	
-	if (cameraPos.y < -770) cameraPos.y = -770;
 
 	if (cameraPos.y > GROUND_HEIGHT)
 	{
 		time += .01;
-		cout << time << endl;
 		float dist = 0.5 * G * pow(time, 2);
 
 		cameraPos.y -= dist;
 	}
 	else {
 		time = 0;
+		cameraPos.y = GROUND_HEIGHT;
 	}
 	MoveFore = Forward_Step;
 	MoveBack = Backward_Step;
 	MoveRight = Right_Step;
 	MoveLeft = Left_Step;
 
-	vec3 ThirdPerson_offset = vec3(0.0f, 300.0f, 100.0f);
-	vec3 FirstPerson_offset = vec3(0.0f, 200.0f, 15.0f);
+	vec3 ThirdPerson_offset = vec3(0.0f, 270.0f, 150.0f);
+	vec3 FirstPerson_offset = vec3(0.0f, 200.0f, -15.0f);
 	
 	if (!isThirdPerson) {
 		view = lookAt(cameraPos + FirstPerson_offset, cameraPos + FirstPerson_offset + cameraFront, cameraUp);
 		glUniform4fv(Camera_location, 1, (value_ptr)(cameraPos + FirstPerson_offset));
-		glUniform4fv(CameraFront_location, 1, (value_ptr)(cameraFront));
 	}
 	else {
 		view = lookAt(cameraPos + ThirdPerson_offset, cameraPos + ThirdPerson_offset + cameraFront, cameraUp);
@@ -675,7 +722,7 @@ void My_Display()
 	}
 
 	mat4 CharT = translate(Identity, cameraPos);
-	mat4 CharR;
+	mat4 CharR = rotate(Identity, -radians(_yaw-90), vec3(0.0f, 1.0f, 0.0f));
 	mat4 Char_mv = CharT * CharR;
 
 	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &Char_mv[0][0]);
@@ -698,7 +745,7 @@ void My_Display()
 		glDrawElements(GL_TRIANGLES, CharShape[i].drawCount, GL_UNSIGNED_INT, 0);
 	}
 	mat4 ShipS = scale(Identity, vec3(0.2f, 0.2f, 0.2f));
-	mat4 ShipT = translate(Identity, vec3(1000.0f, 0.0f, 1000.0f));
+	mat4 ShipT = translate(Identity, vec3(800.0f, -1200.0f, 800.0f));
 	mat4 Ship_mv = ShipT * ShipS;
 	glUniformMatrix4fv(mv_location, 1, GL_FALSE, &Ship_mv[0][0]);
 
